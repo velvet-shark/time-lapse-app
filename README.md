@@ -29,9 +29,9 @@ source venv/bin/activate
 
 - Install dependencies:
 
-  ```bash
-  pip install -r requirements.txt
-  ```
+```bash
+pip install -r requirements.txt
+```
 
 ## Usage
 
@@ -43,14 +43,14 @@ source venv/bin/activate
 python main.py --input_folder images/input/ --reference_image path/to/reference.jpg
 ```
 
-Optional Arguments:
+**Optional Arguments:**
 
 --output_folder: Folder to save processed images (default: images/processed/)
 --output_video: Path to output video file (default: output/timelapse.mp4)
 --size: Size (width and height) of output images in pixels (default: 256)
 --fps: Frames per second for the output video (default: 24)
 
-Example:
+**Example:**
 
 ```bash
 python main.py \
