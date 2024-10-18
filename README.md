@@ -49,6 +49,8 @@ python main.py --input_folder images/input/ --reference_image path/to/reference.
 --output_video: Path to output video file (default: output/timelapse.mp4)
 --size: Size (width and height) of output images in pixels (default: 256)
 --fps: Frames per second for the output video (default: 24)
+--adjust_color: Enable color adjustment using reference image (default: False)
+--reference_image: Path to reference image for color correction (default: None)
 
 **Example:**
 
@@ -57,6 +59,7 @@ python main.py \
   --input_folder images/input/ \
   --output_folder images/processed/ \
   --output_video output/my_timelapse.mp4 \
+  --adjust_color \
   --reference_image images/input/ref_image.jpg \
   --size 512 \
   --fps 30

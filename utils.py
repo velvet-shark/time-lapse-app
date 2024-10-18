@@ -64,16 +64,16 @@ def align_face(image, landmarks, size):
     M = cv2.getRotationMatrix2D(eyes_center, angle, scale)
 
     # Adjust the translation component of the matrix
-    tX = size * 0.5
-    tY = size * 0.4
+    tX = image.width * 0.5
+    tY = image.height * 0.4
     M[0, 2] += (tX - eyes_center[0])
     M[1, 2] += (tY - eyes_center[1])
 
-    # Apply the affine transformation
+    # Apply the affine transformation to the entire image
     aligned_image = cv2.warpAffine(
         np.array(image),
         M,
-        (size, size),
+        (image.width, image.height),
         flags=cv2.INTER_CUBIC
     )
 
