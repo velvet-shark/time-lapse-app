@@ -100,14 +100,14 @@ def create_timelapse(image_folder, output_video, fps):
     clip.write_videofile(output_video, codec='libx264')
     logging.info(f"Video saved to {output_video}")
 
-def crop_and_resize(image, size):
-    width, height = image.size
-    new_width, new_height = size, size
+def crop_and_resize(image, target_width):
+    # Calculate the aspect ratio
+    aspect_ratio = image.height / image.width
 
-    left = (width - new_width) / 2
-    top = (height - new_height) / 2
-    right = (width + new_width) / 2
-    bottom = (height + new_height) / 2
+    # Calculate the new height maintaining the aspect ratio
+    target_height = int(target_width * aspect_ratio)
 
-    image = image.crop((left, top, right, bottom))
-    return image.resize((size, size), Image.ANTIALIAS)
+    # Resize the image
+    resized_image = image.resize((target_width, target_height), Image.LANCZOS)
+
+    return resized_image

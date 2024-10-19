@@ -38,8 +38,9 @@ def process_images(input_folder, output_folder, reference_image_path, size, adju
             aligned_image = align_face(image, landmarks, size)
             if adjust_color_flag:
                 aligned_image = adjust_color(aligned_image, reference_image)
+            resized_image = crop_and_resize(aligned_image, size)  # Resize based on width
             output_path = os.path.join(output_folder, f"img{idx:04d}.jpg")
-            aligned_image.save(output_path)
+            resized_image.save(output_path)
         except Exception as e:
             logging.error(f"Error processing {filename}: {e}")
 
