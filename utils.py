@@ -35,9 +35,12 @@ def get_face_landmarks(image):
         return None
 
 def align_face(image, landmarks, size):
+    # Increase size by 10% to handle rotation black space
+    enlarged_size = int(size * 1.10)
+
     # Desired coordinates (centered face)
-    desired_left_eye = (0.35 * size, 0.35 * size)
-    desired_right_eye = (0.65 * size, 0.35 * size)
+    desired_left_eye = (0.35 * enlarged_size, 0.35 * enlarged_size)
+    desired_right_eye = (0.65 * enlarged_size, 0.35 * enlarged_size)
 
     # Extract the coordinates of the left and right eye
     left_eye_pts = landmarks['left_eye']
@@ -63,17 +66,11 @@ def align_face(image, landmarks, size):
     # Get the rotation matrix
     M = cv2.getRotationMatrix2D(eyes_center, angle, scale)
 
-    # Adjust the translation component of the matrix
-    tX = image.width * 0.5
-    tY = image.height * 0.4
-    M[0, 2] += (tX - eyes_center[0])
-    M[1, 2] += (tY - eyes_center[1])
-
     # Apply the affine transformation to the entire image
     aligned_image = cv2.warpAffine(
         np.array(image),
         M,
-        (image.width, image.height),
+        (image.width, image.height),  # Use original image dimensions
         flags=cv2.INTER_CUBIC
     )
 
