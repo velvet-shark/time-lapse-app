@@ -20,10 +20,29 @@ def convert_heic_to_jpg(image_folder):
     for filename in os.listdir(image_folder):
         if filename.lower().endswith('.heic'):
             image_path = os.path.join(image_folder, filename)
-            image = Image.open(image_path)
+            heif_file = pyheif.read(image_path)
+
+            # Extract EXIF data
+            exif_data = None
+            for metadata in heif_file.metadata or []:
+                if metadata['type'] == 'Exif':
+                    exif_data = metadata['data']
+                    break
+
+            # Convert to PIL Image
+            image = Image.frombytes(
+                heif_file.mode,
+                heif_file.size,
+                heif_file.data,
+                "raw",
+                heif_file.mode,
+                heif_file.stride,
+            )
+
+            # Save as JPG
             new_filename = filename.rsplit('.', 1)[0] + '.jpg'
             new_image_path = os.path.join(image_folder, new_filename)
-            image.save(new_image_path, 'JPEG')
+            image.save(new_image_path, 'JPEG', exif=exif_data)
             logging.info(f"Converted {filename} to {new_filename}")
 
 def get_face_landmarks(image):

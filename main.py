@@ -13,6 +13,53 @@ from utils import (
 )
 from PIL import Image
 import logging
+from PIL import ImageDraw, ImageFont
+from PIL.ExifTags import TAGS
+import datetime
+import calendar
+
+def get_image_date(image_path):
+    try:
+        image = Image.open(image_path)
+        exif_data = image._getexif()
+        if exif_data:
+            for tag, value in exif_data.items():
+                decoded_tag = TAGS.get(tag, tag)
+                if decoded_tag == "DateTimeOriginal":
+                    return value.split()[0]  # Return only the date part
+    except AttributeError:
+        logging.warning("No EXIF data found in image.")
+    except Exception as e:
+        logging.warning(f"Could not extract date from image: {e}")
+
+    # Fallback to file's last modified date
+    timestamp = os.path.getmtime(image_path)
+    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y:%m:%d')
+
+def overlay_date(image, date_text):
+    draw = ImageDraw.Draw(image)
+    
+    # Load a TrueType font
+    try:
+        # Provide the full path to the font file if necessary
+        font_path = "/Users/radek/Library/Fonts/Montserrat-Bold.otf"  # Update this path
+        font = ImageFont.truetype(font_path, 48)  # Adjust the font size as needed
+    except IOError:
+        logging.warning("TrueType font not found, using default font.")
+        font = ImageFont.load_default()  # Fallback to default font if TrueType font is unavailable
+
+    text_position = (20, image.height - 70)  # Adjust position for larger text
+
+    # Draw black border
+    draw.text((text_position[0] - 1, text_position[1] - 1), date_text, font=font, fill="black")
+    draw.text((text_position[0] + 1, text_position[1] - 1), date_text, font=font, fill="black")
+    draw.text((text_position[0] - 1, text_position[1] + 1), date_text, font=font, fill="black")
+    draw.text((text_position[0] + 1, text_position[1] + 1), date_text, font=font, fill="black")
+
+    # Draw white text
+    draw.text(text_position, date_text, (255, 255, 255), font=font)
+
+    return image
 
 def process_images(input_folder, output_folder, reference_image_path, size, adjust_color_flag):
     logging.info("Starting image processing...")
@@ -21,28 +68,41 @@ def process_images(input_folder, output_folder, reference_image_path, size, adju
     # Convert HEIC images to JPG
     convert_heic_to_jpg(input_folder)
 
-    image_files = sorted([
-        f for f in os.listdir(input_folder)
-        if f.lower().endswith(('.png', '.jpg', '.jpeg'))
-    ])
+    # Collect image files with their dates
+    image_files_with_dates = []
+    for filename in os.listdir(input_folder):
+        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+            image_path = os.path.join(input_folder, filename)
+            date = get_image_date(image_path)
+            if date:
+                image_files_with_dates.append((image_path, date))
 
-    for idx, filename in enumerate(image_files):
-        image_path = os.path.join(input_folder, filename)
+    # Sort image files by extracted date
+    image_files_with_dates.sort(key=lambda x: x[1])
+
+    for idx, (image_path, date) in enumerate(image_files_with_dates):
         logging.info(f"Processing {image_path}...")
         try:
             image = load_image(image_path)
             landmarks = get_face_landmarks(image)
             if landmarks is None:
-                logging.warning(f"No face detected in {filename}. Skipping.")
+                logging.warning(f"No face detected in {os.path.basename(image_path)}. Skipping.")
                 continue
             aligned_image = align_face(image, landmarks, size)
             if adjust_color_flag:
                 aligned_image = adjust_color(aligned_image, reference_image)
             resized_image = crop_and_resize(aligned_image, size)  # Resize based on width
+
+            # Overlay date
+            year, month, _ = date.split(':')
+            month_name = calendar.month_name[int(month)]
+            date_text = f"{year} {month_name}"
+            resized_image = overlay_date(resized_image, date_text)
+
             output_path = os.path.join(output_folder, f"img{idx:04d}.jpg")
             resized_image.save(output_path)
         except Exception as e:
-            logging.error(f"Error processing {filename}: {e}")
+            logging.error(f"Error processing {os.path.basename(image_path)}: {e}")
 
     logging.info("Image processing completed.")
 
