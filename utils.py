@@ -95,13 +95,6 @@ def align_face(image, landmarks, size):
 
     return Image.fromarray(aligned_image)
 
-def adjust_color(image, reference):
-    matched = match_histograms(
-        np.array(image),
-        np.array(reference)
-    )
-    return Image.fromarray(np.uint8(matched))
-
 def create_timelapse(image_folder, output_video, fps):
     from moviepy.editor import ImageSequenceClip
     image_files = sorted([
